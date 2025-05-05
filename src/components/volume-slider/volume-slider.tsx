@@ -51,14 +51,33 @@ const VolumeWrapper = styled.div`
 
 type TVolumeSliderProps = {
   value: number;
-  handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleValueChange: (newVolume: number) => void;
 };
 
 export const VolumeSlider: FC<TVolumeSliderProps> = ({
-  handleInputChange,
+  handleValueChange,
   value,
 }) => {
   const thumbPosition = value * 100;
+
+  function onWheel(e: React.WheelEvent<HTMLInputElement>) {
+    e.preventDefault();
+    const newValue = String(
+      Math.max(
+        0,
+        Math.min(1, Number(e.currentTarget.value) - Math.sign(e.deltaY) * 0.05)
+      )
+    );
+    console.log(e.deltaY, e.currentTarget.value, newValue);
+
+    if (e.currentTarget.value === newValue) return;
+    e.currentTarget.value = newValue;
+    handleValueChange?.(Number(e));
+  }
+
+  function onChange(e: React.ChangeEvent<HTMLInputElement>) {
+    handleValueChange?.(Number(e.target.value));
+  }
 
   return (
     <SliderWrapper>
@@ -74,15 +93,17 @@ export const VolumeSlider: FC<TVolumeSliderProps> = ({
             min={0}
             max={1}
             step={0.05}
-            value={value || 0.75}
-            onChange={handleInputChange}
+            value={value}
+            onChange={onChange}
+            onWheel={onWheel}
             style={{
               width: "100%",
               position: "absolute",
-              top: 0,
-              height: "0.4rem",
+              top: "-1rem",
+              height: "2rem",
               opacity: 0,
               pointerEvents: "all",
+              zIndex: 2,
             }}
           />
         </SliderTrack>

@@ -32,7 +32,7 @@ export const UserControls = ({
   value,
   muteOutput,
   muteInput,
-  handleInputChange,
+  handleVolumeChange,
 }: {
   line: TLine | null;
   joinProductionOptions: TJoinProductionOptions;
@@ -42,14 +42,14 @@ export const UserControls = ({
   value: number;
   muteOutput: () => void;
   muteInput: () => void;
-  handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleVolumeChange: (newVolume: number) => void;
 }) => {
   return (
     <>
       {!isIOSMobile &&
         !isIpad &&
         !(line?.programOutputLine && joinProductionOptions.isProgramUser) && (
-          <VolumeSlider value={value} handleInputChange={handleInputChange} />
+          <VolumeSlider value={value} handleValueChange={handleVolumeChange} />
         )}
       <ButtonWrapper>
         {!(line?.programOutputLine && joinProductionOptions.isProgramUser) && (
