@@ -1,2 +1,2 @@
 # Don't convert line endings on text files
-* text=false
+* text eol=lf
