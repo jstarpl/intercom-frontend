@@ -1,4 +1,5 @@
 import styled from "@emotion/styled";
+import { useEffect, useState } from "react";
 import { isMobile } from "../../bowser";
 import { PrimaryButton } from "../landing-page/form-elements";
 
@@ -39,20 +40,51 @@ export const LongPressToTalkButton = ({
   onStartTalking,
   onStopTalking,
 }: TLongPressToTalkButton) => {
+  const [ref, setRef] = useState<HTMLButtonElement | null>(null)
+
+  useEffect(() => {
+    if (!ref) return
+
+    const onPointerDown = (e: PointerEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      onStartTalking?.();
+    };
+
+    const onPointerUp = (e: PointerEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      onStopTalking?.();
+    };
+
+    const onClick = (e: MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    const onContextMenu = (e: Event) => {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    ref.addEventListener('pointerdown', onPointerDown);
+    ref.addEventListener('pointerup', onPointerUp);
+    ref.addEventListener('click', onClick);
+    ref.addEventListener('contextmenu', onContextMenu);
+
+    return () => {
+      ref.removeEventListener("pointerdown", onPointerDown);
+      ref.removeEventListener("pointerup", onPointerUp);
+      ref.removeEventListener("click", onClick);
+      ref.removeEventListener("contextmenu", onContextMenu);
+    }
+  }, [ref])
+
   return (
     <Button
+      ref={setRef}
       className={`${isMobile ? "mobile" : ""} ${isTalking ? "active-btn" : ""}`}
       type="button"
-      onPointerDown={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        onStartTalking?.();
-      }}
-      onPointerUp={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        onStopTalking?.();
-      }}
     >
       <span
         style={{

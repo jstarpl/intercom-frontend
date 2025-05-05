@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 
 type UsePushToTalkOptions = {
   muteInput: (mute: boolean) => void;
@@ -6,7 +6,7 @@ type UsePushToTalkOptions = {
 
 export function usePushToTalk({ muteInput }: UsePushToTalkOptions) {
   const [isTalking, setIsTalking] = useState<boolean>(false);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const startTalking = useCallback(() => {
     muteInput(false);
@@ -19,25 +19,12 @@ export function usePushToTalk({ muteInput }: UsePushToTalkOptions) {
   }, [muteInput]);
 
   const handleLongPressStart = useCallback(() => {
-    timeoutRef.current = setTimeout(() => {
-      startTalking();
-    }, 300);
+    startTalking();
   }, [startTalking]);
 
   const handleLongPressEnd = useCallback(() => {
     stopTalking();
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
   }, [stopTalking]);
-
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
 
   return {
     isTalking,
