@@ -1,4 +1,3 @@
-import styled from "@emotion/styled";
 import { ErrorMessage } from "@hookform/error-message";
 import { FC, useEffect, useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
@@ -12,7 +11,7 @@ import {
   FormLabel,
   SecondaryButton,
   StyledWarningMessage,
-} from "../landing-page/form-elements";
+} from "../form-elements/form-elements";
 import { Spinner } from "../loader/loader";
 import { useAddProductionLine } from "../manage-productions-page/use-add-production-line";
 import { useDeleteProduction } from "../manage-productions-page/use-delete-production";
@@ -20,13 +19,15 @@ import { ConfirmationModal } from "../verify-decision/confirmation-modal";
 import {
   AddLineHeader,
   AddLineSectionForm,
+  CheckboxWrapper,
   CreateLineButton,
-  DeleteButton,
-  ManageButtons,
   RemoveIconWrapper,
-  SpinnerWrapper,
 } from "./production-list-components";
-import { CopyAllLinksButton } from "../copy-button/copy-all-links-button";
+import {
+  ButtonsWrapper,
+  DeleteButton,
+  SpinnerWrapper,
+} from "../delete-button/delete-button-components";
 
 interface ManageProductionButtonsProps {
   production: TBasicProductionResponse;
@@ -37,11 +38,6 @@ type Line = {
   name: string;
   programOutputLine: boolean;
 };
-
-const CheckboxWrapper = styled.div`
-  margin-bottom: 3rem;
-  margin-top: 0.5rem;
-`;
 
 export const ManageProductionButtons: FC<ManageProductionButtonsProps> = (
   props
@@ -72,16 +68,12 @@ export const ManageProductionButtons: FC<ManageProductionButtonsProps> = (
     },
   });
 
-  const {
-    loading: createLineLoading,
-    successfullCreate: successfullCreateLine,
-    error: lineCreateError,
-  } = useAddProductionLine(production.productionId, newLine);
+  const { loading: createLineLoading, success: successfullCreateLine } =
+    useAddProductionLine(production.productionId, newLine);
 
   const {
     loading: deleteProductionLoading,
-    successfullDelete: successfullDeleteProduction,
-    error: productionDeleteError,
+    success: successfullDeleteProduction,
   } = useDeleteProduction(removeProductionId);
 
   useEffect(() => {
@@ -117,12 +109,7 @@ export const ManageProductionButtons: FC<ManageProductionButtonsProps> = (
 
   return (
     <>
-      {productionDeleteError && (
-        <StyledWarningMessage className="error-message production-list">
-          {productionDeleteError.message}
-        </StyledWarningMessage>
-      )}
-      <ManageButtons>
+      <ButtonsWrapper>
         {!addLineOpen && (
           <SecondaryButton
             style={{ marginRight: "1rem" }}
@@ -144,11 +131,7 @@ export const ManageProductionButtons: FC<ManageProductionButtonsProps> = (
             </SpinnerWrapper>
           )}
         </DeleteButton>
-      </ManageButtons>
-      <CopyAllLinksButton
-        production={production}
-        className="manage-production-page"
-      />
+      </ButtonsWrapper>
       {addLineOpen && (
         <AddLineSectionForm>
           <FormLabel>
@@ -184,11 +167,6 @@ export const ManageProductionButtons: FC<ManageProductionButtonsProps> = (
             </CheckboxWrapper>
           </FormLabel>
           <ErrorMessage errors={errors} name="name" as={StyledWarningMessage} />
-          {lineCreateError && (
-            <StyledWarningMessage className="error-message">
-              {lineCreateError.message}
-            </StyledWarningMessage>
-          )}
           <CreateLineButton onClick={handleSubmit(onSubmit)}>
             Create
             {createLineLoading && (

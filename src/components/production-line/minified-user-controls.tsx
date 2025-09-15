@@ -11,7 +11,6 @@ import {
   MinifiedControlsButton,
   PTTWrapper,
 } from "./production-line-components";
-import { ShareLineButton } from "./share-line-button";
 import { TJoinProductionOptions, TLine } from "./types";
 import { TUseAudioInputValues } from "./use-audio-input";
 
@@ -27,7 +26,6 @@ export const MinifiedUserControls = ({
   isInputMuted,
   inputAudioStream,
   value,
-  productionId,
 }: {
   muteOutput: () => void;
   muteInput: () => void;
@@ -40,7 +38,6 @@ export const MinifiedUserControls = ({
   isInputMuted: boolean;
   inputAudioStream: TUseAudioInputValues;
   value: number;
-  productionId: string;
 }) => {
   return (
     <MinifiedControls>
@@ -80,13 +77,6 @@ export const MinifiedUserControls = ({
             </PTTWrapper>
           </MinifiedControlsBlock>
         )}
-      {line && (
-        <ShareLineButton
-          isMinified
-          productionId={productionId}
-          lineId={line.id}
-        />
-      )}
     </MinifiedControls>
   );
 };

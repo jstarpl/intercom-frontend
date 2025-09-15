@@ -7,15 +7,15 @@ import {
   useState,
 } from "react";
 import { useNavigate } from "react-router-dom";
-import { noop } from "../../helpers";
 import { API } from "../../api/api.ts";
-import { TJoinProductionOptions } from "./types.ts";
+import { isBrowserSafari, isIpad, isMobile } from "../../bowser.ts";
 import { useGlobalState } from "../../global-state/context-provider.tsx";
 import { TGlobalStateAction } from "../../global-state/global-state-actions.ts";
-import { TUseAudioInputValues } from "./use-audio-input.ts";
-import { startRtcStatInterval } from "./rtc-stat-interval.ts";
-import { isBrowserSafari, isIpad, isMobile } from "../../bowser.ts";
+import { noop } from "../../helpers";
 import logger from "../../utils/logger.ts";
+import { startRtcStatInterval } from "./rtc-stat-interval.ts";
+import { TJoinProductionOptions } from "./types.ts";
+import { TUseAudioInputValues } from "./use-audio-input.ts";
 
 type TRtcConnectionOptions = {
   inputAudioStream: TUseAudioInputValues;

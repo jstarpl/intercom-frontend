@@ -37,6 +37,14 @@ export const FormInput = styled.input`
       -moz-appearance: textfield;
     }
   }
+
+  &.edit-name {
+    margin: 0;
+
+    &.device-label {
+      font-size: 1.2rem;
+    }
+  }
 `;
 
 export const FormSelect = styled.select`
@@ -44,11 +52,16 @@ export const FormSelect = styled.select`
   font-size: 1.6rem;
   padding: 0.5rem;
   ${sharedMargin};
-
   border: 1px solid #6d6d6d;
   border-radius: 0.5rem;
   background: #32383b;
   color: white;
+
+  &.ingest {
+    display: flex;
+    align-items: center;
+    margin: 0 1rem 0 0;
+  }
 `;
 
 export const FormLabel = styled.label`
@@ -57,6 +70,10 @@ export const FormLabel = styled.label`
   select {
     font-size: 1.6rem;
     display: inline-block;
+  }
+
+  &.save-edit {
+    margin-right: 1rem;
   }
 `;
 
@@ -229,4 +246,17 @@ export const SecondaryButton = styled(ActionButton)`
   &:disabled {
     background: rgba(255, 255, 255, 0.8);
   }
+`;
+
+export const SectionTitle = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 3rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+`;
+
+export const DevicesSection = styled.div`
+  position: relative;
 `;

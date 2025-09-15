@@ -5,7 +5,7 @@ import { useGlobalState } from "../../global-state/context-provider";
 import { useWebSocket } from "../../hooks/use-websocket";
 import { useWebsocketActions } from "../../hooks/use-websocket-actions";
 import { useWebsocketReconnect } from "../../hooks/use-websocket-reconnect";
-import { PrimaryButton } from "../landing-page/form-elements";
+import { PrimaryButton } from "../form-elements/form-elements";
 import { Spinner } from "../loader/loader";
 import { ConnectToWsModal } from "./connect-to-ws-modal";
 
@@ -32,6 +32,37 @@ const ConnectButton = styled(PrimaryButton)<{
   svg {
     fill: #482307;
   }
+`;
+
+const TooltipWrapper = styled.div`
+  position: relative;
+  display: inline-flex;
+  justify-content: center;
+
+  &:hover span,
+  &:focus-within span {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(-50%, 0.4rem);
+  }
+`;
+
+const TooltipText = styled.span`
+  position: absolute;
+  top: 115%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: #fff;
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.4rem;
+  font-size: 1.4rem;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.18s ease;
+  pointer-events: none;
+  z-index: 20;
 `;
 
 interface ConnectToWSButtonProps {
@@ -109,14 +140,18 @@ export const ConnectToWSButton = ({
 
   return (
     <ConnectWebSocketWrapper>
-      <ConnectButton
-        isConnected={isWSConnected}
-        onClick={isWSConnected ? wsDisconnect : () => setIsOpen(true)}
-      >
-        {renderButtonContent()}
-        {isWSConnected && <CheckIcon />}
-        {isWSReconnecting && <Spinner className="companion-loader" />}
-      </ConnectButton>
+      <TooltipWrapper>
+        <ConnectButton
+          isConnected={isWSConnected}
+          onClick={isWSConnected ? wsDisconnect : () => setIsOpen(true)}
+        >
+          {renderButtonContent()}
+          {isWSConnected && <CheckIcon />}
+          {isWSReconnecting && <Spinner className="companion-loader" />}
+        </ConnectButton>
+
+        {isWSConnected && <TooltipText id="disconnect">Disconnect</TooltipText>}
+      </TooltipWrapper>
 
       <ConnectToWsModal
         isOpen={isOpen}

@@ -16,27 +16,24 @@ import {
   TVIcon,
   UserIcon,
   UsersIcon,
+  WhipIcon,
 } from "../../assets/icons/icon";
 
 import { isMobile } from "../../bowser";
 import { TLine } from "../production-line/types";
-import { TBasicProductionResponse } from "../../api/api";
-import { CopySingleLink } from "./copy-single-link";
 
 export const LineBlock = ({
   managementMode,
   line,
-  production,
 }: {
   managementMode: boolean;
   line: TLine;
-  production: TBasicProductionResponse;
 }) => {
   const [showFullUserList, setShowFullUserList] = useState<boolean>(false);
 
   return (
     <LineBlockTexts>
-      <LineBlockTitleWrapper>
+      <LineBlockTitleWrapper className={managementMode ? "management" : ""}>
         {line.programOutputLine && (
           <IconWrapper>
             <TVIcon />
@@ -57,17 +54,17 @@ export const LineBlock = ({
             {showFullUserList ? <ChevronUpIcon /> : <ChevronDownIcon />}
           </ParticipantExpandBtn>
         )}
-        {managementMode && (
-          <CopySingleLink production={production} line={line} />
-        )}
       </LineBlockTitleWrapper>
       <LineBlockParticipants>
         {(showFullUserList
           ? line.participants
           : line.participants.slice(0, 4)
         ).map((participant) => (
-          <LineBlockParticipant key={`participant-${participant.sessionId}`}>
-            <UserIcon />
+          <LineBlockParticipant
+            key={`participant-${participant.sessionId}`}
+            className={participant.isWhip ? "whip" : ""}
+          >
+            {participant.isWhip ? <WhipIcon /> : <UserIcon />}
             <PersonText>{participant.name}</PersonText>
           </LineBlockParticipant>
         ))}

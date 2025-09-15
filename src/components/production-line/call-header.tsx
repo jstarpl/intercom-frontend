@@ -1,17 +1,17 @@
+import { useMemo } from "react";
 import {
   UsersIcon,
   ChevronUpIcon,
   ChevronDownIcon,
   TVIcon,
+  WhipIcon,
 } from "../../assets/icons/icon";
 import {
-  HeaderTexts,
   ProductionName,
   ParticipantCount,
-  HeaderIcon,
-  Id,
   ParticipantCountWrapper,
 } from "../production-list/production-list-components";
+import { HeaderTexts, HeaderIcon } from "../shared/shared-components";
 import { AudioFeedIcon, CallHeader } from "./production-line-components";
 import { TLine, TProduction } from "./types";
 
@@ -34,6 +34,14 @@ export const CallHeaderComponent = ({
   const truncatedLineName =
     line && line.name.length > 40 ? `${line.name.slice(0, 40)}...` : line?.name;
 
+  const totalUsers = useMemo(() => {
+    return line?.participants.filter((p) => !p.isWhip).length || 0;
+  }, [line]);
+
+  const totalWhipSessions = useMemo(() => {
+    return line?.participants.filter((p) => p.isWhip).length || 0;
+  }, [line]);
+
   return (
     <CallHeader open={open} onClick={setOpen}>
       <HeaderTexts
@@ -46,19 +54,25 @@ export const CallHeaderComponent = ({
             <TVIcon />
           </AudioFeedIcon>
         )}
-        <ProductionName
-          title={`${production?.name} (id: ${production?.productionId}) / ${line?.name}`}
-        >
+        <ProductionName title={`${production?.name} / ${line?.name}`}>
           <span className="production-name-container">
-            {`${truncatedProductionName}`}
-            <Id>{`(id: ${production?.productionId})`}</Id>
-            {`/ ${truncatedLineName}`}
+            {`${truncatedProductionName}/ ${truncatedLineName}`}
           </span>
         </ProductionName>
-        <ParticipantCountWrapper>
-          <UsersIcon />
-          <ParticipantCount>{line?.participants.length}</ParticipantCount>
-        </ParticipantCountWrapper>
+        <div>
+          {totalWhipSessions > 0 && (
+            <ParticipantCountWrapper
+              className={totalWhipSessions > 0 ? "whip" : ""}
+            >
+              <WhipIcon />
+              <ParticipantCount>{totalWhipSessions}</ParticipantCount>
+            </ParticipantCountWrapper>
+          )}
+          <ParticipantCountWrapper className={totalUsers > 0 ? "active" : ""}>
+            <UsersIcon />
+            <ParticipantCount>{totalUsers}</ParticipantCount>
+          </ParticipantCountWrapper>
+        </div>
       </HeaderTexts>
       {line?.programOutputLine && open && (
         <AudioFeedIcon open={open}>

@@ -1,15 +1,15 @@
 import styled from "@emotion/styled";
+import { isIpad, isMobile } from "../../bowser";
+import { ActionButton } from "../form-elements/form-elements";
 import {
   DisplayContainer,
   FlexContainer,
   mediaQueries,
 } from "../generic-components";
-import { ActionButton } from "../landing-page/form-elements";
 import {
+  CollapsibleItemWrapper,
   HeaderWrapper,
-  ProductionItemWrapper,
-} from "../production-list/production-list-components";
-import { isIpad, isMobile } from "../../bowser";
+} from "../shared/shared-components";
 
 export const CallInfo = styled.div`
   display: flex;
@@ -148,6 +148,7 @@ export const CallWrapper = styled.div<{ isSomeoneSpeaking: boolean }>`
   flex: 0 0 calc(25% - 2rem);
   ${isMobile ? `flex-grow: 1;` : `flex-grow: 0;`}
   min-width: 35rem;
+  max-width: 49rem;
   background-color: transparent;
   border-radius: 0.5rem;
   animation: ${({ isSomeoneSpeaking }) =>
@@ -178,7 +179,7 @@ export const CallWrapper = styled.div<{ isSomeoneSpeaking: boolean }>`
   }
 `;
 
-export const CallContainer = styled(ProductionItemWrapper)<{
+export const CallContainer = styled(CollapsibleItemWrapper)<{
   isProgramLine?: boolean;
 }>`
   margin: 0;
@@ -231,4 +232,11 @@ export const MinifiedControlsButton = styled(UserControlBtn)`
       fill: #6fd84f;
     }
   }
+`;
+
+export const UrlButtonsWrapper = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
 `;

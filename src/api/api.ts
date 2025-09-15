@@ -2,7 +2,7 @@ import { handleFetchRequest } from "./handle-fetch-request.ts";
 
 const API_VERSION = import.meta.env.VITE_BACKEND_API_VERSION ?? "api/v1/";
 const API_URL =
-  `${import.meta.env.VITE_BACKEND_URL}${API_VERSION}` ||
+  `${import.meta.env.VITE_BACKEND_URL.replace(/\/+$/, "")}/${API_VERSION}` ||
   `${window.location.origin}/${API_VERSION}`;
 const API_KEY = import.meta.env.VITE_BACKEND_API_KEY;
 
@@ -16,6 +16,7 @@ type TParticipant = {
   sessionId: string;
   endpointId: string;
   isActive: boolean;
+  isWhip: boolean;
 };
 
 type TLine = {
@@ -73,6 +74,17 @@ type TShareUrlResponse = {
   url: string;
 };
 
+type TUpdateProductionNameOptions = {
+  productionId: string;
+  name: string;
+};
+
+type TUpdateLineNameOptions = {
+  productionId: string;
+  lineId: string;
+  name: string;
+};
+
 export const API = {
   createProduction: async ({ name, lines }: TCreateProductionOptions) =>
     handleFetchRequest<TBasicProductionResponse>(
@@ -85,6 +97,39 @@ export const API = {
         body: JSON.stringify({
           name,
           lines,
+        }),
+      })
+    ),
+  updateProductionName: async ({
+    productionId,
+    name,
+  }: TUpdateProductionNameOptions) =>
+    handleFetchRequest<TBasicProductionResponse>(
+      fetch(`${API_URL}production/${productionId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          ...(API_KEY ? { Authorization: `Bearer ${API_KEY}` } : {}),
+        },
+        body: JSON.stringify({
+          name,
+        }),
+      })
+    ),
+  updateLineName: async ({
+    productionId,
+    lineId,
+    name,
+  }: TUpdateLineNameOptions) =>
+    handleFetchRequest<TBasicProductionResponse>(
+      fetch(`${API_URL}production/${productionId}/line/${lineId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          ...(API_KEY ? { Authorization: `Bearer ${API_KEY}` } : {}),
+        },
+        body: JSON.stringify({
+          name,
         }),
       })
     ),
@@ -234,6 +279,16 @@ export const API = {
         body: JSON.stringify({
           path,
         }),
+      })
+    );
+  },
+  reauth: async (): Promise<void> => {
+    return handleFetchRequest<void>(
+      fetch(`${API_URL}reauth`, {
+        method: "GET",
+        headers: {
+          ...(API_KEY ? { Authorization: `Bearer ${API_KEY}` } : {}),
+        },
       })
     );
   },

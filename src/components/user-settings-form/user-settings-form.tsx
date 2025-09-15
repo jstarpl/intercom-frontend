@@ -7,25 +7,25 @@ import { useSubmitOnEnter } from "../../hooks/use-submit-form-enter-press";
 import { Checkbox } from "../checkbox/checkbox";
 import { ButtonWrapper } from "../generic-components";
 import {
+  DevicesSection,
   FormInput,
   FormSelect,
   PrimaryButton,
+  SectionTitle,
   StyledWarningMessage,
-} from "../landing-page/form-elements";
-import { FormInputWithLoader } from "../landing-page/form-input-with-loader";
+} from "../form-elements/form-elements";
 import {
   CheckboxWrapper,
   FetchErrorMessage,
-  NameWrapper,
-  ProductionName,
 } from "../landing-page/join-production-components";
-import { useFetchProduction } from "../landing-page/use-fetch-production";
-import { TJoinProductionOptions } from "../production-line/types";
+import { TJoinProductionOptions, TProduction } from "../production-line/types";
 import { ReloadDevicesButton } from "../reload-devices-button.tsx/reload-devices-button";
 import { TUserSettings } from "../user-settings/types";
 import { ConfirmationModal } from "../verify-decision/confirmation-modal";
 import { FormItem } from "./form-item";
 import { useSubmitForm } from "./use-submit-form";
+import { useFetchProductionList } from "../landing-page/use-fetch-production-list";
+import { FirefoxWarning } from "../production-line/firefox-warning";
 
 type FormValues = TJoinProductionOptions & {
   audiooutput: string;
@@ -42,7 +42,6 @@ export const UserSettingsForm = ({
   isJoinProduction,
   preSelected,
   buttonText,
-  addAdditionalCallId,
   isProgramUser,
   setIsProgramUser,
   defaultValues,
@@ -74,12 +73,11 @@ export const UserSettingsForm = ({
   isFirstConnection?: string;
   needsConfirmation?: boolean;
 }) => {
-  const [joinProductionId, setJoinProductionId] = useState<null | number>(null);
+  const [production, setProduction] = useState<TProduction | null>(null);
   const [isProgramOutputLine, setIsProgramOutputLine] =
     useState<boolean>(false);
   const [confirmModalOpen, setConfirmModalOpen] = useState<boolean>(false);
   const [selectedLineName, setSelectedLineName] = useState<string>("");
-  const [productionName, setProductionName] = useState<string>("");
   const {
     formState: { errors, isValid },
     register,
@@ -95,26 +93,16 @@ export const UserSettingsForm = ({
     },
   });
 
-  const {
-    error: productionFetchError,
-    production,
-    loading,
-  } = useFetchProduction(joinProductionId);
+  const { productions, error: productionListFetchError } =
+    useFetchProductionList({
+      limit: "100",
+      extended: "true",
+    });
 
   // this will update whenever lineId changes
   const selectedLineId = useWatch({ name: "lineId", control });
 
   const [{ devices, selectedProductionId }] = useGlobalState();
-
-  const { onChange, onBlur, name, ref } = isJoinProduction
-    ? register("productionId", {
-        required: "Production ID is required",
-        min: 1,
-      })
-    : register("username", {
-        required: "Username is required",
-        minLength: 1,
-      });
 
   const { onSubmit } = useSubmitForm({
     isJoinProduction,
@@ -126,7 +114,6 @@ export const UserSettingsForm = ({
     updateUserSettings,
     onSave,
     selectedLineName,
-    productionName,
   });
 
   const isSettingsConfig = !isJoinProduction;
@@ -163,10 +150,20 @@ export const UserSettingsForm = ({
   }, [preSelected, production, reset, isJoinProduction]);
 
   useEffect(() => {
-    if (addAdditionalCallId && isJoinProduction) {
-      setValue("productionId", addAdditionalCallId);
+    if (defaultValues && "productionId" in defaultValues) {
+      setValue("productionId", defaultValues.productionId);
     }
-  }, [addAdditionalCallId, setValue, isJoinProduction]);
+  }, [defaultValues, setValue]);
+
+  useEffect(() => {
+    if (defaultValues && "productionId" in defaultValues && productions) {
+      setProduction(
+        productions?.productions.find(
+          (p) => p.productionId === defaultValues.productionId
+        ) || null
+      );
+    }
+  }, [defaultValues, productions]);
 
   // If the device no longer exists set field values to default
   useEffect(() => {
@@ -181,7 +178,6 @@ export const UserSettingsForm = ({
       reset({
         productionId: `${selectedProductionId}`,
       });
-      setJoinProductionId(parseInt(selectedProductionId, 10));
     }
   }, [reset, selectedProductionId, isJoinProduction]);
 
@@ -194,43 +190,66 @@ export const UserSettingsForm = ({
     setConfirmModalOpen,
   });
 
-  useEffect(() => {
-    if (production?.name && isJoinProduction) {
-      setProductionName(production.name);
-    }
-  }, [production?.name, isJoinProduction]);
-
   return (
-    <>
+    <div style={{ minWidth: updateUserSettings ? "40rem" : "" }}>
       {!preSelected && isJoinProduction && (
-        <FormItem fieldName="productionId" errors={errors}>
-          <NameWrapper>
-            <ProductionName>Production Name</ProductionName>
-            <ProductionName className="name">
-              {production?.name || "Enter a production ID"}
-            </ProductionName>
-          </NameWrapper>
-          <FormInputWithLoader
+        <FormItem label="Production Name" errors={errors}>
+          <FormSelect
+            // eslint-disable-next-line
+            {...register(`productionId`)}
             onChange={(ev) => {
-              onChange(ev);
-
-              const pid = parseInt(ev.target.value, 10);
-
-              setJoinProductionId(Number.isNaN(pid) ? null : pid);
+              setProduction(
+                productions?.productions.find(
+                  (p) => p.productionId === ev.target.value
+                ) || null
+              );
             }}
-            label="Production ID"
-            placeholder="Production ID"
-            name={name}
-            inputRef={ref}
-            onBlur={onBlur}
-            type="number"
-            loading={loading}
-          />
-          {productionFetchError && (
+          >
+            {productions &&
+              productions.productions.map((p) => (
+                <option key={p.productionId} value={p.productionId}>
+                  {p.name}
+                </option>
+              ))}
+          </FormSelect>
+          {productionListFetchError && (
             <FetchErrorMessage>
-              The production ID could not be fetched.{" "}
-              {productionFetchError.name} {productionFetchError.message}.
+              The production list could not be fetched.
+              {productionListFetchError.name} {productionListFetchError.message}
+              .
             </FetchErrorMessage>
+          )}
+        </FormItem>
+      )}
+      {!preSelected && isJoinProduction && (
+        <FormItem label="Line">
+          <FormSelect
+            // eslint-disable-next-line
+            {...register(`lineId`, {
+              required: "Line id is required",
+              minLength: 1,
+              onChange: (e) => {
+                const selectedLine = production?.lines.find(
+                  (line) => line.id.toString() === e.target.value
+                );
+                setIsProgramOutputLine(!!selectedLine?.programOutputLine);
+              },
+            })}
+            style={{
+              display: production ? "block" : "none",
+            }}
+          >
+            {production &&
+              production.lines.map((line) => (
+                <option key={line.id} value={line.id}>
+                  {line.name || line.id}
+                </option>
+              ))}
+          </FormSelect>
+          {!production && (
+            <StyledWarningMessage>
+              Please enter a production id
+            </StyledWarningMessage>
           )}
         </FormItem>
       )}
@@ -246,6 +265,10 @@ export const UserSettingsForm = ({
       </FormItem>
       {(isFirstConnection || isSupportedBrowser || isSettingsConfig) && (
         <>
+          <DevicesSection>
+            <SectionTitle>Devices</SectionTitle>
+            {isBrowserFirefox && <FirefoxWarning type="firefox-warning" />}
+          </DevicesSection>
           <FormItem label="Input">
             <FormSelect
               // eslint-disable-next-line
@@ -281,38 +304,6 @@ export const UserSettingsForm = ({
             )}
           </FormItem>
         </>
-      )}
-      {!preSelected && isJoinProduction && (
-        <FormItem label="Line">
-          <FormSelect
-            // eslint-disable-next-line
-            {...register(`lineId`, {
-              required: "Line id is required",
-              minLength: 1,
-              onChange: (e) => {
-                const selectedLine = production?.lines.find(
-                  (line) => line.id.toString() === e.target.value
-                );
-                setIsProgramOutputLine(!!selectedLine?.programOutputLine);
-              },
-            })}
-            style={{
-              display: production ? "block" : "none",
-            }}
-          >
-            {production &&
-              production.lines.map((line) => (
-                <option key={line.id} value={line.id}>
-                  {line.name || line.id}
-                </option>
-              ))}
-          </FormSelect>
-          {!production && (
-            <StyledWarningMessage>
-              Please enter a production id
-            </StyledWarningMessage>
-          )}
-        </FormItem>
       )}
       {isProgramOutputLine && isJoinProduction && (
         <>
@@ -364,6 +355,6 @@ export const UserSettingsForm = ({
           shouldSubmitOnEnter
         />
       )}
-    </>
+    </div>
   );
 };

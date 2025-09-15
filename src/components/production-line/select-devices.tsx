@@ -9,7 +9,7 @@ import {
   FormSelect,
   PrimaryButton,
   StyledWarningMessage,
-} from "../landing-page/form-elements";
+} from "../form-elements/form-elements";
 import { ReloadDevicesButton } from "../reload-devices-button.tsx/reload-devices-button";
 import { DeviceButtonWrapper } from "./production-line-components";
 import { TJoinProductionOptions, TLine } from "./types";
@@ -162,13 +162,6 @@ export const SelectDevices = ({
             </StyledWarningMessage>
           )}
         </FormLabel>
-      )}
-      {isBrowserFirefox && !isMobile && (
-        <StyledWarningMessage>
-          If a new device has been added Firefox needs the permission to be
-          manually reset. If your device is missing, please remove the
-          permission and reload page.
-        </StyledWarningMessage>
       )}
       <DeviceButtonWrapper>
         {!(isBrowserFirefox && !isMobile) && <ReloadDevicesButton />}
