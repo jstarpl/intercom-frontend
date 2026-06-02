@@ -16,6 +16,8 @@ interface UseWebSocketProps {
   onAction: (action: WebSocketAction, index?: number) => void;
   onConnected?: () => void;
   resetLastSentCallsState?: () => void;
+  onConflict?: (message?: string) => void;
+  onError?: (message: string) => void;
 }
 
 export function useWebSocket({
@@ -23,6 +25,8 @@ export function useWebSocket({
   onAction,
   onConnected,
   resetLastSentCallsState,
+  onConflict,
+  onError,
 }: UseWebSocketProps) {
   const socketRef = useRef<WebSocket | null>(null);
   const [isWSConnected, setIsWSConnected] = useState<boolean>(false);
@@ -34,33 +38,48 @@ export function useWebSocket({
       const ws = new WebSocket(url);
       socketRef.current = ws;
 
-      const timeout = setTimeout(() => {
-        if (ws.readyState !== WebSocket.OPEN) {
+      const connectionErrorMessage =
+        "Could not connect to the WebSocket server";
+      const dispatchConnectionError = () => {
+        if (onError) {
+          onError(connectionErrorMessage);
+        } else {
           dispatch({
             type: "ERROR",
-            payload: {
-              error: new Error("Could not connect to the WebSocket server"),
-            },
+            payload: { error: new Error(connectionErrorMessage) },
           });
+        }
+      };
+
+      const timeout = setTimeout(() => {
+        if (ws.readyState !== WebSocket.OPEN) {
+          dispatchConnectionError();
           ws.close();
         }
       }, 3000);
 
       ws.onopen = () => {
         clearTimeout(timeout);
-
         setIsWSConnected(true);
         dispatch({ type: "SET_WEBSOCKET", payload: ws });
-
-        if (onConnected) {
-          onConnected();
-        }
+        if (onConnected) onConnected();
       };
 
       ws.onmessage = (event: MessageEvent) => {
         try {
           const data = JSON.parse(event.data);
-          if (data.action) {
+          if (data?.type === "error" && data?.statusCode === 409) {
+            if (onConflict) onConflict(data?.message);
+            const err = new Error(data?.message || "Connection conflict");
+            dispatch({
+              type: "ERROR",
+              payload: { error: err },
+            });
+            setIsWSConnected(false);
+            ws.close();
+            return;
+          }
+          if (data?.action) {
             onAction(data.action, data.index);
           }
         } catch (e) {
@@ -70,12 +89,7 @@ export function useWebSocket({
 
       ws.onerror = () => {
         clearTimeout(timeout);
-        dispatch({
-          type: "ERROR",
-          payload: {
-            error: new Error("Could not connect to the WebSocket server"),
-          },
-        });
+        dispatchConnectionError();
         setIsWSConnected(false);
       };
 
@@ -87,16 +101,14 @@ export function useWebSocket({
 
       socketRef.current = ws;
     },
-    [onAction, dispatch, onConnected]
+    [onAction, dispatch, onConnected, onConflict, onError]
   );
 
   const wsDisconnect = () => {
     socketRef.current?.close();
     socketRef.current = null;
 
-    if (resetLastSentCallsState) {
-      resetLastSentCallsState();
-    }
+    if (resetLastSentCallsState) resetLastSentCallsState();
 
     setIsWSConnected(false);
     dispatch({ type: "SET_WEBSOCKET", payload: null });
@@ -105,15 +117,11 @@ export function useWebSocket({
   useEffect(() => {
     return () => {
       if (socketRef.current) {
-        socketRef.current?.close();
+        socketRef.current.close();
         socketRef.current = null;
       }
     };
   }, []);
 
-  return {
-    wsDisconnect,
-    wsConnect,
-    isWSConnected,
-  };
+  return { wsDisconnect, wsConnect, isWSConnected };
 }

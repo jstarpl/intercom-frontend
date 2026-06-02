@@ -35,26 +35,36 @@ export const useInitiateProductionCall = ({
         // Wait for devices to refresh and get the updated devices
         const updatedDevices = await getUpdatedDevices();
 
-        const inputDeviceExists = updatedDevices.input.some(
-          (device) =>
-            device.deviceId === payload.joinProductionOptions.audioinput
-        );
+        // Only validate devices if enumeration returned results.
+        // On quick page load, permission may not yet be confirmed, causing
+        // getUpdatedDevices() to return empty arrays — skip validation in
+        // that case and let getUserMedia handle truly unavailable devices.
+        // If the stored input device is no longer available, fall back to
+        // the first available device rather than blocking the user.
+        let effectiveAudioInput = payload.joinProductionOptions.audioinput;
 
-        const outputDeviceExists = updatedDevices.output.some(
-          (device) => device.deviceId === payload.audiooutput
-        );
+        if (updatedDevices.input.length > 0) {
+          const inputDeviceExists = updatedDevices.input.some(
+            (device) => device.deviceId === effectiveAudioInput
+          );
 
-        if (
-          !inputDeviceExists ||
-          (!outputDeviceExists && !isBrowserSafari && !isMobile && !isIpad)
-        ) {
-          dispatch({
-            type: "ERROR",
-            payload: {
-              error: new Error("Selected devices are not available"),
-            },
-          });
-          return false;
+          if (!inputDeviceExists) {
+            effectiveAudioInput = updatedDevices.input[0].deviceId;
+          }
+
+          const outputDeviceExists = updatedDevices.output.some(
+            (device) => device.deviceId === payload.audiooutput
+          );
+
+          if (!outputDeviceExists && !isBrowserSafari && !isMobile && !isIpad) {
+            dispatch({
+              type: "ERROR",
+              payload: {
+                error: new Error("Selected devices are not available"),
+              },
+            });
+            return false;
+          }
         }
 
         const uuid = globalThis.crypto.randomUUID();
@@ -64,7 +74,10 @@ export const useInitiateProductionCall = ({
           payload: {
             id: uuid,
             callState: {
-              joinProductionOptions: payload.joinProductionOptions,
+              joinProductionOptions: {
+                ...payload.joinProductionOptions,
+                audioinput: effectiveAudioInput,
+              },
               audiooutput: payload.audiooutput,
               mediaStreamInput: null,
               dominantSpeaker: null,

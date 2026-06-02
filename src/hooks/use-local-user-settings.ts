@@ -13,6 +13,7 @@ export const useLocalUserSettings = ({
   dispatch,
 }: TUseLocalUserSettings) => {
   const { readFromStorage, removeFromStorage } = useStorage();
+
   useEffect(() => {
     if (devices.input || devices.output) {
       const storedAudioInput = readFromStorage("audioinput");
@@ -31,15 +32,13 @@ export const useLocalUserSettings = ({
 
       if (!foundOutputDevice) removeFromStorage("audiooutput");
 
-      const payload = {
-        username: readFromStorage("username") || "",
-        audioinput: foundInputDevice,
-        audiooutput: foundOutputDevice,
-      };
-
       dispatch({
         type: "UPDATE_USER_SETTINGS",
-        payload,
+        payload: {
+          username: readFromStorage("username") || "",
+          audioinput: foundInputDevice,
+          audiooutput: foundOutputDevice,
+        },
       });
     }
   }, [devices, dispatch, readFromStorage, removeFromStorage]);
